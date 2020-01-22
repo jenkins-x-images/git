@@ -1,0 +1,81 @@
+buildPack: none
+pipelineConfig:
+  pipelines:
+    release:
+      pipeline:
+        options:
+          containerOptions:
+            resources:
+              limits:
+                memory: 6Gi
+              requests:
+                memory: 2Gi
+        agent:
+          image: gcr.io/kaniko-project/executor:9912ccbf8d22bbafbf971124600fbb0b13b9cbd6
+        stages:
+        - name: release
+          environment:
+          - name: GIT_COMMITTER_EMAIL
+            value: jenkins-x@googlegroups.com
+          - name: GIT_COMMITTER_NAME
+            value: jenkins-x-bot
+          - name: GIT_AUTHOR_EMAIL
+            value: jenkins-x@googlegroups.com
+          - name: GIT_AUTHOR_NAME
+            value: jenkins-x-bot
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: /builder/home/kaniko-secret.json
+          steps:
+
+          - name: warm-cache
+            command: /kaniko/warmer
+            image: gcr.io/kaniko-project/warmer
+            args:
+              - --cache-dir=/workspace
+              - --image=centos:7
+
+          - name: build
+            image: gcr.io/kaniko-project/executor:9912ccbf8d22bbafbf971124600fbb0b13b9cbd6
+            command: /kaniko/executor
+            args:
+              - --dockerfile=Dockerfile
+              - --destination=gcr.io/jenkinsxio/git:${inputs.params.version}
+              - --context=/workspace/source
+              - --cache-repo=gcr.io/jenkinsxio/cache-git
+              - --cache=true
+              - --cache-dir=/workspace
+
+    pullRequest:
+      pipeline:
+        options:
+          containerOptions:
+            resources:
+              limits:
+                memory: 6Gi
+              requests:
+                memory: 2Gi
+        agent:
+          image: gcr.io/kaniko-project
+        stages:
+        - name: build-and-push
+          environment:
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: /builder/home/kaniko-secret.json
+          steps:
+          - name: warm-cache
+            command: /kaniko/warmer
+            image: gcr.io/kaniko-project/warmer
+            args:
+              - --cache-dir=/workspace
+              - --image=centos:7
+
+          - name: build
+            image: gcr.io/kaniko-project/executor:9912ccbf8d22bbafbf971124600fbb0b13b9cbd6
+            command: /kaniko/executor
+            args:
+              - --dockerfile=Dockerfile
+              - --destination=gcr.io/jenkinsxio/git:${inputs.params.version}
+              - --context=/workspace/source
+              - --cache-repo=gcr.io/jenkinsxio/cache-git
+              - --cache=true
+              - --cache-dir=/workspace
