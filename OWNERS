@@ -1,0 +1,12 @@
+approvers:
+- jenkins-x-bot
+- garethjevans
+- cagiti
+- macox
+- apg84
+reviewers:
+- jenkins-x-bot
+- garethjevans
+- cagiti
+- macox
+- apg84
