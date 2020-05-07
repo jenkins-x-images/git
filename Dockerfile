@@ -29,4 +29,5 @@ RUN yum install -y unzip \
 
 FROM centos:7
 WORKDIR /root/
+COPY --from=0 /usr/local/git /usr/local/git
 COPY --from=0 /usr/local/git/bin/git /usr/local/bin/git
